@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:app", // 關鍵：必須包含 app. 路徑
+                "--reload"
+            ],
+            "jinja": true,
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
