@@ -3,3 +3,4 @@ uvicorn[standard]
 markitdown[all]
 python-multipart
 gunicorn
+docling
