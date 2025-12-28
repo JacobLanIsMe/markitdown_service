@@ -90,16 +90,6 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         )
         # Run the potentially blocking conversion in a thread
         result = await asyncio.to_thread(converter.convert, tmp_path)
-
-        for element, _level in result.document.iterate_items():
-            if isinstance(element, PictureItem):
-                print(
-                    f"Picture {element.self_ref}\n"
-                    f"Caption: {element.caption_text(doc=result.document)}\n"
-                    f"Annotations: {element.annotations}"
-                )
-
-
         markdown = ""
         if result is not None and getattr(result, "document", None) is not None:
             try:
