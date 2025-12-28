@@ -4,12 +4,13 @@ import tempfile
 import os
 import asyncio
 from pathlib import Path
-
-# Optional import for Docling endpoint (requires `docling` installed in the venv)
-try:
-    from docling.document_converter import DocumentConverter
-except Exception:
-    DocumentConverter = None
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import (
+    PdfPipelineOptions,
+    PictureDescriptionApiOptions,
+)
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling_core.types.doc import PictureItem
 
 
 app = FastAPI(title="markitdown-fastapi-demo")
@@ -65,9 +66,39 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         finally:
             tmp.close()
 
-        converter = DocumentConverter()
+        picture_description_options = PictureDescriptionApiOptions(
+            url="http://localhost:5037/Chat/PictureDescription",
+            params=dict(
+                model="model",
+                seed=42,
+                max_completion_tokens=200,
+            ),
+            prompt="Describe the image in three sentences. Be consise and accurate.",
+            timeout=600
+        )
+        pipeline_options = PdfPipelineOptions(
+            enable_remote_services=True  # <-- this is required!
+        )
+        pipeline_options.do_picture_description = True
+        pipeline_options.picture_description_options = picture_description_options
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                )
+            }
+        )
         # Run the potentially blocking conversion in a thread
         result = await asyncio.to_thread(converter.convert, tmp_path)
+
+        for element, _level in result.document.iterate_items():
+            if isinstance(element, PictureItem):
+                print(
+                    f"Picture {element.self_ref}\n"
+                    f"Caption: {element.caption_text(doc=result.document)}\n"
+                    f"Annotations: {element.annotations}"
+                )
+
 
         markdown = ""
         if result is not None and getattr(result, "document", None) is not None:
