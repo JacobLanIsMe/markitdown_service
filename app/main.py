@@ -74,7 +74,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
                 max_completion_tokens=200,
             ),
             prompt="Describe the image in three sentences. Be consise and accurate.",
-            timeout=6000
+            timeout=72000
         )
         pipeline_options = PdfPipelineOptions(
             enable_remote_services=True  # <-- this is required!
