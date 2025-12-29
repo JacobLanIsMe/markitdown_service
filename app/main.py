@@ -65,7 +65,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             tmp_path = tmp.name
         finally:
             tmp.close()
-
+        # picture_description_options 裡面設定的參數都是假的，真的設定在後端服務。
         picture_description_options = PictureDescriptionApiOptions(
             url="http://localhost:5037/Chat/PictureDescription",
             params=dict(
@@ -74,7 +74,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
                 max_completion_tokens=200,
             ),
             prompt="Describe the image in three sentences. Be consise and accurate.",
-            timeout=600
+            timeout=6000
         )
         pipeline_options = PdfPipelineOptions(
             enable_remote_services=True  # <-- this is required!
