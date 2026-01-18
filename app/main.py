@@ -81,11 +81,19 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             granite_picture_description
         )
         pipeline_options.picture_description_options.prompt = (
-            "Please analyze this image from a retail and marketing perspective. Focus on the following: "
-            "1. Product Identification: What is the main product? List its key features, branding, and packaging details. "
-            "2. Visual Appeal: Describe the materials, colors, and textures. How would you describe the 'vibe' of this product to a consumer? (e.g., premium, eco-friendly, modern). "
-            "3. Usage Context: Where is the product placed? (e.g., on a shelf, in a lifestyle setting, in a customer's hand). "
-            "4. Key Text: Extract any visible text, prices, or promotional labels."
+            "Please act as a Retail Operations & Marketing Expert. Analyze the provided image and provide a concise yet professional summary based on its content:\n\n"
+            "1. If the image is a PRODUCT or STORE DISPLAY:\n\n"
+            "Product Details: Identify the product(s), branding, and key physical features (color, material, packaging).\n\n"
+            "Consumer Perspective: Describe the 'vibe' (e.g., luxury, value-for-money, organic) and its potential target audience.\n\n"
+            "Context & Promotion: Describe the setting (shelf, catalog, or lifestyle) and identify any visible pricing or promotional tags.\n\n"
+            "2. If the image is a REPORT, CHART, or TABLE:\n\n"
+            "Data Summary: What is the main metric being tracked? (e.g., Monthly Sales, Inventory Levels, Customer Traffic).\n\n"
+            "Key Findings: Identify the most significant data points (e.g., peak performance, lowest dips, or sudden changes).\n\n"
+            "Business Insight: What is the 'takeaway' or trend that a manager should notice immediately?\n\n"
+            "3. Summary Conclusion:\n\n"
+            "Provide a 3 to 5 sentence summary of the image's key information.\n\n"
+            "Focus on describing the current state, facts, and essential details.\n\n"
+            "Keep the tone objective and professional."
         )
         pipeline_options.images_scale = 2.0
         pipeline_options.generate_page_images = True
