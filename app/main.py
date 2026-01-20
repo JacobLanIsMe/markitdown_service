@@ -90,8 +90,13 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             "Data Summary: What is the main metric being tracked? (e.g., Monthly Sales, Inventory Levels, Customer Traffic).\n\n"
             "Key Findings: Identify the most significant data points (e.g., peak performance, lowest dips, or sudden changes).\n\n"
             "Business Insight: What is the 'takeaway' or trend that a manager should notice immediately?\n\n"
-            "3. Summary Conclusion:\n\n"
-            "Provide a 3 to 5 sentence summary of the image's key information.\n\n"
+            "3. Deep Visual Scan & Granular Description:\n\n"
+            "Provide an exhaustive description of all visual elements present in the image.\n\n"
+            "Focus on micro-details such as textures, lighting directions (e.g., soft key light, harsh shadows), "
+            "background elements, color gradients, and the placement/spatial relationship of objects.\n\n"
+            "Describe the presence of any text (logos, fine print, labels) or human presence (postures, expressions, hand-models).\n\n"
+            "Aim for high technical density to ensure a person who hasn't seen the image can visualize it with 95% accuracy.\n\n"
+
             "Focus on describing the current state, facts, and essential details.\n\n"
             "Keep the tone objective and professional."
         )
