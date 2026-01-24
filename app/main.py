@@ -8,8 +8,8 @@ from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 from docling.document_converter import DocumentConverter, PdfFormatOption
-from docling.datamodel.pipeline_options import granite_picture_description
-# from docling_core.types.doc import PictureItem
+from docling_core.types.doc import PictureItem
+from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, granite_picture_description)
 
 
 app = FastAPI(title="markitdown-fastapi-demo")
@@ -76,32 +76,32 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         #     timeout=72000
         # )
         pipeline_options = PdfPipelineOptions()
+        pipeline_options.enable_remote_services = True
         pipeline_options.do_picture_description = True
-        pipeline_options.picture_description_options = (
-            granite_picture_description
-        )
-        pipeline_options.picture_description_options.prompt = (
-            "Please act as a Retail Operations & Marketing Expert. Analyze the provided image and provide a concise yet professional summary based on its content:\n\n"
-            "1. If the image is a PRODUCT or STORE DISPLAY:\n\n"
-            "Product Details: Identify the product(s), branding, and key physical features (color, material, packaging).\n\n"
-            "Consumer Perspective: Describe the 'vibe' (e.g., luxury, value-for-money, organic) and its potential target audience.\n\n"
-            "Context & Promotion: Describe the setting (shelf, catalog, or lifestyle) and identify any visible pricing or promotional tags.\n\n"
-            "2. If the image is a REPORT, CHART, or TABLE:\n\n"
-            "Data Summary: What is the main metric being tracked? (e.g., Monthly Sales, Inventory Levels, Customer Traffic).\n\n"
-            "Key Findings: Identify the most significant data points (e.g., peak performance, lowest dips, or sudden changes).\n\n"
-            "Business Insight: What is the 'takeaway' or trend that a manager should notice immediately?\n\n"
-            "3. Deep Visual Scan & Granular Description:\n\n"
-            "Provide an exhaustive description of all visual elements present in the image.\n\n"
-            "Focus on micro-details such as textures, lighting directions (e.g., soft key light, harsh shadows), "
-            "background elements, color gradients, and the placement/spatial relationship of objects.\n\n"
-            "Describe the presence of any text (logos, fine print, labels) or human presence (postures, expressions, hand-models).\n\n"
-            "Aim for high technical density to ensure a person who hasn't seen the image can visualize it with 95% accuracy.\n\n"
+        pipeline_options.picture_description_options = vllm_local_options(model="qwen3-vl:8b")
+        # pipeline_options.picture_description_options.prompt = (
+        #     "Please act as a Retail Operations & Marketing Expert. Analyze the provided image and provide a concise yet professional summary based on its content:\n\n"
+        #     "1. If the image is a PRODUCT or STORE DISPLAY:\n\n"
+        #     "Product Details: Identify the product(s), branding, and key physical features (color, material, packaging).\n\n"
+        #     "Consumer Perspective: Describe the 'vibe' (e.g., luxury, value-for-money, organic) and its potential target audience.\n\n"
+        #     "Context & Promotion: Describe the setting (shelf, catalog, or lifestyle) and identify any visible pricing or promotional tags.\n\n"
+        #     "2. If the image is a REPORT, CHART, or TABLE:\n\n"
+        #     "Data Summary: What is the main metric being tracked? (e.g., Monthly Sales, Inventory Levels, Customer Traffic).\n\n"
+        #     "Key Findings: Identify the most significant data points (e.g., peak performance, lowest dips, or sudden changes).\n\n"
+        #     "Business Insight: What is the 'takeaway' or trend that a manager should notice immediately?\n\n"
+        #     "3. Deep Visual Scan & Granular Description:\n\n"
+        #     "Provide an exhaustive description of all visual elements present in the image.\n\n"
+        #     "Focus on micro-details such as textures, lighting directions (e.g., soft key light, harsh shadows), "
+        #     "background elements, color gradients, and the placement/spatial relationship of objects.\n\n"
+        #     "Describe the presence of any text (logos, fine print, labels) or human presence (postures, expressions, hand-models).\n\n"
+        #     "Aim for high technical density to ensure a person who hasn't seen the image can visualize it with 95% accuracy.\n\n"
 
-            "Focus on describing the current state, facts, and essential details.\n\n"
-            "Keep the tone objective and professional."
-        )
-        pipeline_options.images_scale = 2.0
-        pipeline_options.generate_page_images = True
+        #     "Focus on describing the current state, facts, and essential details.\n\n"
+        #     "Keep the tone objective and professional." \
+        #     "Respond in Traditional Chinese."
+        # )
+        # pipeline_options.images_scale = 2.0
+        # pipeline_options.generate_page_images = True
         converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
@@ -111,6 +111,13 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         )
         # Run the potentially blocking conversion in a thread
         result = await asyncio.to_thread(converter.convert, tmp_path)
+        for element, _level in result.document.iterate_items():
+            if isinstance(element, PictureItem):
+                print(
+                    f"Picture {element.self_ref}\n"
+                    f"Caption: {element.caption_text(doc=result.document)}\n"
+                    f"Meta: {element.meta}"
+                )
         markdown = ""
         if result is not None and getattr(result, "document", None) is not None:
             try:
@@ -127,3 +134,23 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             os.unlink(tmp_path)
         except Exception:
             pass
+
+def vllm_local_options(model: str):
+    options = PictureDescriptionApiOptions(
+        url="http://localhost:11434/v1/chat/completions",
+        params=dict(
+            model=model, 
+            seed=42,
+            temperature=0.1, # 降低隨機性，讓描述更精確
+            max_completion_tokens=1024, # 描述圖片通常 1k 內就綽綽有餘
+        ),
+        prompt="請仔細讀取此檔案並依照以下要求取得內容：\n\n"
+                "### 1. 文字提取 (Text Extraction)\n\n"
+                "* 請精確識別並提取檔案中所有的文字內容。\n\n"
+                "* **重要條件：** 提取出的文字必須**維持其原始語言**（例如：英文維持英文、中文維持中文），**嚴禁進行翻譯**。\n\n"
+                "### 2. 視覺分析 (Visual Analysis)\n\n"
+                "* **物體與場景**：詳細描述檔案中的視覺元素，包含出現的物體、場景位置、背景環境、人物動作或圖示。\n\n"
+                "* **顏色與風格**：詳細描述主要的色彩配置 (Color Palette)、光學氛圍以及整體的設計風格（如：極簡風、工業風等）。\n\n",
+        timeout=600,
+    )
+    return options
