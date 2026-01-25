@@ -79,6 +79,13 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         )
         # Run the potentially blocking conversion in a thread
         result = await asyncio.to_thread(converter.convert, tmp_path)
+        for element, _level in result.document.iterate_items():
+            if isinstance(element, PictureItem):
+                print(
+                    f"Picture {element.self_ref}\n"
+                    f"Caption: {element.caption_text(doc=result.document)}\n"
+                    f"Meta: {element.meta}"
+                )
         markdown = ""
         if result is not None and getattr(result, "document", None) is not None:
             try:
@@ -108,8 +115,9 @@ def vllm_local_options(model: str):
         prompt = (
             "請將此檔案中的『所有文字提取』與『視覺分析』整合成一個完整且連貫的專業描述段落。\n\n"
             "1. 必須精確識別並提取檔案中所有的文字內容，並將其自然嵌入在敘述中。文字必須**維持原始語言**，嚴禁翻譯。\n"
-            "2. 描述需包含出現的物體、場景、圖示、色彩等視覺元素。\n"
+            "2. 描述需精確識別檔案中的所有物體、場景、圖示、色彩等視覺元素。\n"
         ),
-        timeout=6000,
+        timeout=60000,
     )
     return options
+
