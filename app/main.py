@@ -10,6 +10,7 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import PictureItem
 from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, VlmPipelineOptions, granite_picture_description)
 from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions, ResponseFormat
+from docling.pipeline.vlm_pipeline import VlmPipeline
 
 app = FastAPI(title="markitdown-fastapi-demo")
 
@@ -71,15 +72,11 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             model="qwen3-vl:8b"
         )
 
-        # pipeline_options = PdfPipelineOptions()
-        # pipeline_options.enable_remote_services = True
-        # pipeline_options.do_picture_description = True
-        # pipeline_options.picture_description_options = vllm_local_options(model="qwen3-vl:8b")
-        
         converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
                     pipeline_options=pipeline_options,
+                    pipeline_cls=VlmPipeline,
                 )
             }
         )
