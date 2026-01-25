@@ -69,7 +69,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             enable_remote_services=True  # required when calling remote VLM endpoints
         )
         pipeline_options.vlm_options = ollama_vlm_options(
-            model="qwen3-vl:8b"
+            model="qwen3-vl:4b"
         )
 
         converter = DocumentConverter(
