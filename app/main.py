@@ -137,8 +137,8 @@ def ollama_vlm_options(model: str):
             "* **元素與風格**：描述該區塊的所有物體、色彩、光影氛圍、圖示樣式及物件位置。\n"
             "* **情境關聯**：解釋視覺元素是如何與文字內容產生關聯的（例如：文字位於紅色高亮區塊內）。\n"
         ),
-        timeout=90,
-        scale=1.0,
+        timeout=900000,
+        scale=2.0,
         response_format=ResponseFormat.MARKDOWN,
     )
     return options
