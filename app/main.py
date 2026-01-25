@@ -5,12 +5,11 @@ import os
 import asyncio
 from pathlib import Path
 from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import PictureItem
-from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, granite_picture_description)
-
+from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, VlmPipelineOptions, granite_picture_description)
+from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions, ResponseFormat
 
 app = FastAPI(title="markitdown-fastapi-demo")
 
@@ -65,10 +64,17 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         finally:
             tmp.close()
        
-        pipeline_options = PdfPipelineOptions()
-        pipeline_options.enable_remote_services = True
-        pipeline_options.do_picture_description = True
-        pipeline_options.picture_description_options = vllm_local_options(model="qwen3-vl:8b")
+        pipeline_options = VlmPipelineOptions(
+            enable_remote_services=True  # required when calling remote VLM endpoints
+        )
+        pipeline_options.vlm_options = ollama_vlm_options(
+            model="qwen3-vl:8b"
+        )
+
+        # pipeline_options = PdfPipelineOptions()
+        # pipeline_options.enable_remote_services = True
+        # pipeline_options.do_picture_description = True
+        # pipeline_options.picture_description_options = vllm_local_options(model="qwen3-vl:8b")
         
         converter = DocumentConverter(
             format_options={
@@ -111,5 +117,31 @@ def vllm_local_options(model: str):
             "2. 描述需包含出現的物體、場景、圖示、色彩等視覺元素。\n"
         ),
         timeout=6000,
+    )
+    return options
+
+def ollama_vlm_options(model: str):
+    options = ApiVlmOptions(
+        url="http://localhost:11434/v1/chat/completions",  # the default Ollama endpoint
+        params=dict(
+            model=model,
+        ),
+        prompt=(
+            "# 檔案轉換需求：整合式視覺與文字分析\n"
+            "請讀取此檔案，並依照其**原始排版順序**，將視覺描述與文字內容整合為一份 **Markdown 文件**。請遵循以下原則：\n"
+            "### 1. 整合式結構 (Integrated Structure)\n"
+            "* **按序描述**：請由上而下、由左至右，依照檔案的視覺流向進行解析。\n"
+            "* **圖文融合**：針對每一個視覺區塊（如標題區、側邊欄、圖表、產品圖等），先描述其**視覺特徵**（物體、顏色、風格），緊接著提取該區塊內的**文字內容**。\n"
+            "* **排版還原**：使用 Markdown 標題 (H1-H3) 代表層級，使用區塊引用 (Blockquotes) 或列表來區分視覺描述與實際文字。\n"
+            "### 2. 文字提取規範 (Text Extraction)\n"
+            "* **精確提取**：完整保留所有文字，不得刪減。\n"
+            "* **嚴禁翻譯**：文字必須**維持原始語言**（如英文維持英文、中文維持中文）。\n"
+            "### 3. 視覺細節描述 (Visual Details)\n"
+            "* **元素與風格**：描述該區塊的所有物體、色彩、光影氛圍、圖示樣式及物件位置。\n"
+            "* **情境關聯**：解釋視覺元素是如何與文字內容產生關聯的（例如：文字位於紅色高亮區塊內）。\n"
+        ),
+        timeout=90,
+        scale=1.0,
+        response_format=ResponseFormat.MARKDOWN,
     )
     return options
