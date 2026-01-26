@@ -65,23 +65,28 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         finally:
             tmp.close()
        
-        pipeline_options = VlmPipelineOptions(
-            enable_remote_services=True  # required when calling remote VLM endpoints
+        pipeline_options = PdfPipelineOptions(
+            enable_remote_services=True  # <-- this is required!
         )
-        pipeline_options.vlm_options = ollama_vlm_options(
-            model="qwen3-vl:4b"
-        )
+        pipeline_options.do_picture_description = True
+        pipeline_options.picture_description_options = google_local_options()
 
         converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
-                    pipeline_options=pipeline_options,
-                    pipeline_cls=VlmPipeline,
+                    pipeline_options=pipeline_options
                 )
             }
         )
         # Run the potentially blocking conversion in a thread
         result = await asyncio.to_thread(converter.convert, tmp_path)
+        for element, _level in result.document.iterate_items():
+            if isinstance(element, PictureItem):
+                print(
+                    f"Picture {element.self_ref}\n"
+                    f"Caption: {element.caption_text(doc=result.document)}\n"
+                    f"Meta: {element.meta}"
+                )
         markdown = ""
         if result is not None and getattr(result, "document", None) is not None:
             try:
@@ -140,5 +145,18 @@ def ollama_vlm_options(model: str):
         timeout=900000,
         scale=2.0,
         response_format=ResponseFormat.MARKDOWN,
+    )
+    return options
+
+def google_local_options():
+    options = PictureDescriptionApiOptions(
+        url="http://localhost:5037/Chat/PictureDescription",
+        params=dict(
+            model="gemini",
+            seed=42,
+            max_completion_tokens=200,
+        ),
+        prompt="Describe the image in three sentences. Be consise and accurate.",
+        timeout=900000,
     )
     return options
