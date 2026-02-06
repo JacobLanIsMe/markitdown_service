@@ -69,7 +69,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             enable_remote_services=True  # <-- this is required!
         )
         pipeline_options.do_picture_description = True
-        pipeline_options.picture_description_options = vllm_local_options("qwen3:4b")
+        pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:4b")
 
         converter = DocumentConverter(
             format_options={
@@ -108,15 +108,15 @@ def vllm_local_options(model: str):
     options = PictureDescriptionApiOptions(
         url="http://localhost:11434/v1/chat/completions",
         params=dict(
-            model=model, 
+            model=model,
             seed=42,
-            temperature=0.1, # 降低隨機性，讓描述更精確
-            max_completion_tokens=1024, # 描述圖片通常 1k 內就綽綽有餘
+            temperature=0.1,  # 降低隨機性，讓描述更精確
+            max_completion_tokens=1024,  # 描述圖片通常 1k 內就綽綽有餘
         ),
-        prompt = (
-            "請將此檔案中的『所有文字提取』與『視覺分析』整合成一個完整且連貫的專業描述段落。\n\n"
-            "1. 文字提取必須精確識別並提取檔案中所有的文字內容，並將其自然嵌入在敘述中。文字必須**維持原始語言**，嚴禁翻譯。\n"
-            "2. 視覺分析需包含出現的物體、場景、圖示、色彩等視覺元素。\n"
+        prompt=(
+            "Extract ALL visible text from the image (titles, small text, tables, labels, dates). Preserve each text's original language — do NOT translate, correct, or summarize. \n"
+            "Also describe key visual features (objects, layout, colors, visual hierarchy).\n"
+            "Output a single professional Chinese paragraph that includes every extracted text and explains how each text is presented visually. Output only that paragraph."
         ),
         timeout=6000,
     )
