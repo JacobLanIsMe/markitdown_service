@@ -9,7 +9,13 @@ from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import PictureItem
-from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, granite_picture_description)
+from docling.datamodel.pipeline_options import (
+    PdfPipelineOptions, 
+    PictureDescriptionApiOptions, 
+    granite_picture_description,
+    TableStructureOptions,
+    EasyOcrOptions
+)
 
 
 app = FastAPI(title="markitdown-fastapi-demo")
@@ -66,10 +72,14 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             tmp.close()
        
         pipeline_options = PdfPipelineOptions()
-        pipeline_options.enable_remote_services = True
-        pipeline_options.do_picture_description = True
-        pipeline_options.picture_description_options = vllm_local_options(model="qwen3-vl:8b")
-        
+        pipeline_options.do_ocr = True
+        pipeline_options.do_table_structure = True
+        pipeline_options.table_structure_options = TableStructureOptions(
+            do_cell_matching=True
+        )
+        ocr_options = EasyOcrOptions(force_full_page_ocr=True)
+        pipeline_options.ocr_options = ocr_options
+
         converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
