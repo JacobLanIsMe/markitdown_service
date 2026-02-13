@@ -8,7 +8,7 @@ from docling.datamodel.base_models import InputFormat
 
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import PictureItem
-from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, VlmPipelineOptions, granite_picture_description)
+from docling.datamodel.pipeline_options import (PdfPipelineOptions, PictureDescriptionApiOptions, VlmPipelineOptions, granite_picture_description, smolvlm_picture_description)
 from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions, ResponseFormat
 from docling.pipeline.vlm_pipeline import VlmPipeline
 
@@ -64,12 +64,20 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             tmp_path = tmp.name
         finally:
             tmp.close()
-       
-        pipeline_options = PdfPipelineOptions(
-            enable_remote_services=True  # <-- this is required!
-        )
+        pipeline_options = PdfPipelineOptions()
         pipeline_options.do_picture_description = True
-        pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:8b")
+        pipeline_options.picture_description_options = (
+            smolvlm_picture_description
+        )
+        pipeline_options.picture_description_options.prompt = (
+            "Describe every item in the image in three sentences in Traditional Chinese. Be consise and accurate."
+        )
+        pipeline_options.images_scale = 2.0
+        pipeline_options.generate_picture_images = True
+        # pipeline_options = PdfPipelineOptions(
+        #     enable_remote_services=True  # <-- this is required!
+        # )
+        # pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:8b")
 
         converter = DocumentConverter(
             format_options={
