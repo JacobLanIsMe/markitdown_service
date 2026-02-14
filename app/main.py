@@ -112,6 +112,11 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
                 )
                 with element_image_filename.open("wb") as fp:
                     element.get_image(result.document).save(fp, "PNG")
+                print(
+                    f"Picture {element.self_ref}\n"
+                    f"Caption: {element.caption_text(doc=result.document)}\n"
+                    f"Meta: {element.meta}"
+                )
         # Save markdown with embedded pictures
         md_filename = output_dir / f"{doc_filename}-with-images.md"
         result.document.save_as_markdown(md_filename, image_mode=ImageRefMode.EMBEDDED)
