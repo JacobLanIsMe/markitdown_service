@@ -71,6 +71,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         pipeline_options.images_scale = 2.0
         pipeline_options.generate_page_images = True
         pipeline_options.generate_picture_images = True
+        pipeline_options.enable_remote_services=True 
         pipeline_options.picture_description_options = vllm_local_options("qwen3vl:8b")
         
         converter = DocumentConverter(
