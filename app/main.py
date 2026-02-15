@@ -66,18 +66,18 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             tmp.close()
         pipeline_options = PdfPipelineOptions()
         pipeline_options.do_picture_description = True
-        pipeline_options.picture_description_options = (
-            smolvlm_picture_description
-        )
-        pipeline_options.picture_description_options.prompt = (
-            "Describe every item in the image in three sentences in Traditional Chinese. Be consise and accurate."
-        )
+        # pipeline_options.picture_description_options = (
+        #     smolvlm_picture_description
+        # )
+        # pipeline_options.picture_description_options.prompt = (
+        #     "Describe every item in the image in three sentences in Traditional Chinese. Be consise and accurate."
+        # )
         pipeline_options.images_scale = 2.0
         pipeline_options.generate_picture_images = True
-        # pipeline_options = PdfPipelineOptions(
-        #     enable_remote_services=True  # <-- this is required!
-        # )
-        # pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:8b")
+        
+        pipeline_options.enable_remote_services=True  # <-- this is required!
+        
+        pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:8b")
 
         converter = DocumentConverter(
             format_options={
@@ -143,10 +143,10 @@ def vllm_local_options(model: str):
             model=model,
             seed=42,
             temperature=0.0,  # 降低隨機性，讓描述更精確
-            max_completion_tokens=2048,
+            max_completion_tokens=-1, # 不限制輸出長度，確保所有文字都被描述出來
         ),
         prompt=prompt_content,
-        timeout=6000000,
+        timeout=86400
     )
     return options
 
