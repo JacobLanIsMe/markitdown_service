@@ -77,7 +77,7 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
         
         pipeline_options.enable_remote_services=True  # <-- this is required!
         
-        pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:8b")
+        pipeline_options.picture_description_options = vllm_local_options("qwen3-vl:4b")
 
         converter = DocumentConverter(
             format_options={
