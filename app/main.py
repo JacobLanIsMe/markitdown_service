@@ -208,7 +208,7 @@ def PictureDescription(base64_image_str: str) -> str:
     # 執行步驟
     1. 極致文字掃描：擷取所有可見文字，保留原始語言。
     2. 全方位視覺建模：描述版面、配色、結構。
-    3. 整合輸出：將文字與視覺描述融合成一個繁體中文段落。
+    3. 整合輸出：將所有文字與視覺描述融合成一個繁體中文段落。
     
     # 輸出格式
     - 僅輸出一個整合段落。
@@ -219,7 +219,7 @@ def PictureDescription(base64_image_str: str) -> str:
 
     url = "http://localhost:11434/v1/chat/completions"
     payload = {
-        "model": "qwen3-vl:8b",
+        "model": "qwen3-vl:4b",
         "messages": [
             {
                 "role": "system",
