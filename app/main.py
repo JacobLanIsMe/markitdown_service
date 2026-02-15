@@ -231,7 +231,8 @@ def PictureDescription(base64_image_str: str) -> str:
                 ],
             }
         ],
-        "max_tokens": 2000,
+        "max_tokens": -1, # Use model's max context length
+        "stream": False
     }
 
     try:
@@ -279,4 +280,35 @@ def PictureDescription(base64_image_str: str) -> str:
 
 
 def PictureIntegration(md_filepath: str) -> str:
-    
+    """Read a markdown file at `md_filepath`, find embedded images in the
+    form `![Image](data:image/...;base64,...)`, call `PictureDescription` for
+    each image and replace the image markdown with the returned description.
+
+    Returns the modified markdown content as a string.
+    """
+    p = Path(md_filepath)
+    if not p.exists():
+        raise FileNotFoundError(f"Markdown file not found: {md_filepath}")
+
+    # Read file content (try utf-8, fall back to default)
+    try:
+        text = p.read_text(encoding="utf-8")
+    except Exception:
+        text = p.read_text()
+
+    # Regex to capture the full data URI inside the image markdown
+    pattern = re.compile(r'!\[Image\]\((data:image/[^)]+)\)')
+
+    # For each match, call PictureDescription and replace with the description
+    def _replace(match: re.Match) -> str:
+        data_uri = match.group(1)
+        print(f"...{data_uri[-50:]}")
+        try:
+            desc = PictureDescription(data_uri)
+            # Ensure we always return a string
+            return desc if isinstance(desc, str) else str(desc)
+        except Exception as e:
+            return f"[PictureDescription failed: {str(e)}]"
+
+    new_text = pattern.sub(_replace, text)
+    return new_text
