@@ -233,6 +233,8 @@ def PictureDescription(base64_image_str: str) -> str:
                 ],
             }
         ],
+        "seed": 42,
+        "temperature": 0.0, # 保持 0.0 非常重要，避免模型「創意」地重複 Prompt
         "max_tokens": -1, # Use model's max context length
         "stream": False
     }
