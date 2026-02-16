@@ -138,6 +138,13 @@ async def convert_file_to_markdown_by_docling(file: UploadFile = File(...)):
             # fallback to doc export
             markdown = result.document.export_to_markdown()
 
+        # Clean up the intermediate markdown file if it was created
+        try:
+            if md_filename and md_filename.exists():
+                md_filename.unlink()
+        except Exception:
+            pass
+
         return Response(content=markdown or "", media_type="text/markdown")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Docling conversion failed: {str(e)}")
