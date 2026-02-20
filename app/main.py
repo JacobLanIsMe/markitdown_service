@@ -187,7 +187,7 @@ def PictureDescription(base64_image_str: str) -> str:
 
     url = "http://localhost:11434/v1/chat/completions"
     payload = {
-        "model": "qwen3-vl:4b",
+        "model": "qwen3-vl:8b",
         "messages": [
             {
                 "role": "system",
